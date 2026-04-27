@@ -1,19 +1,28 @@
-const express = require('express');
-const cors = require('cors');
+/**
+ * Server entry point.
+ *
+ * Loads environment variables, creates the Express app, and starts
+ * listening. Keep this file minimal — all app configuration lives
+ * in `app.js`.
+ */
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// Load env first (before any other module reads process.env)
+const { env } = require('./config');
+const app = require('./app');
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-}));
-
-app.use(express.json());
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+const PORT = env.PORT;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log('');
+  console.log('┌─────────────────────────────────────────────┐');
+  console.log('│           LGGM Backend API Server            │');
+  console.log('├─────────────────────────────────────────────┤');
+  console.log(`│  Status:      ✅ Running                     │`);
+  console.log(`│  Port:        ${String(PORT).padEnd(30)}│`);
+  console.log(`│  Environment: ${env.NODE_ENV.padEnd(30)}│`);
+  console.log(`│  Frontend:    ${env.FRONTEND_URL.padEnd(30)}│`);
+  console.log('├─────────────────────────────────────────────┤');
+  console.log(`│  Health:      http://localhost:${PORT}/api/health │`);
+  console.log('└─────────────────────────────────────────────┘');
+  console.log('');
 });
