@@ -6,7 +6,8 @@
  * validation / rate limiting.
  */
 const { Router } = require('express');
-const { authLimiter } = require('../middleware/rateLimiter');
+const { body } = require('express-validator');
+const { authLimiter, validate, auth } = require('../middleware');
 const authController = require('../controllers/auth.controller');
 
 const router = Router();
@@ -15,19 +16,39 @@ const router = Router();
 router.use(authLimiter);
 
 // POST /api/auth/signup
-router.post('/signup', authController.signup);
+router.post(
+  '/signup',
+  validate([
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('fullName').optional().trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
+  ]),
+  authController.signup
+);
 
 // POST /api/auth/login
-router.post('/login', authController.login);
+router.post(
+  '/login',
+  validate([
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+  ]),
+  authController.login
+);
 
 // POST /api/auth/logout
 router.post('/logout', authController.logout);
 
 // POST /api/auth/forgot-password
-router.post('/forgot-password', authController.forgotPassword);
+router.post(
+  '/forgot-password',
+  validate([
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  ]),
+  authController.forgotPassword
+);
 
 // GET /api/auth/me  (requires valid token)
-const { auth } = require('../middleware/auth');
 router.get('/me', auth, authController.me);
 
 module.exports = router;
