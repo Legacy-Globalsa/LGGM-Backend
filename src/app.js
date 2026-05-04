@@ -30,8 +30,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// ── Rate limiting ─────────────────────────────────────────────
-app.use(globalLimiter);
+// ── Rate limiting (production only — dev skips to avoid Strict Mode double-effect hammering) ──
+if (env.isProd) {
+  app.use(globalLimiter);
+}
 
 // ── Body parsing ──────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));

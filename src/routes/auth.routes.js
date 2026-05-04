@@ -12,41 +12,25 @@ const authController = require('../controllers/auth.controller');
 
 const router = Router();
 
-// Apply stricter rate limiting to all auth routes
-router.use(authLimiter);
+// Apply stricter rate limiting only to credential mutation routes (not /me)
+router.post('/signup', authLimiter, validate([
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('fullName').optional().trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
+]), authController.signup);
 
-// POST /api/auth/signup
-router.post(
-  '/signup',
-  validate([
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('fullName').optional().trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
-  ]),
-  authController.signup
-);
-
-// POST /api/auth/login
-router.post(
-  '/login',
-  validate([
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-    body('password').notEmpty().withMessage('Password is required'),
-  ]),
-  authController.login
-);
+router.post('/login', authLimiter, validate([
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').notEmpty().withMessage('Password is required'),
+]), authController.login);
 
 // POST /api/auth/logout
 router.post('/logout', authController.logout);
 
 // POST /api/auth/forgot-password
-router.post(
-  '/forgot-password',
-  validate([
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-  ]),
-  authController.forgotPassword
-);
+router.post('/forgot-password', authLimiter, validate([
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+]), authController.forgotPassword);
 
 // GET /api/auth/me  (requires valid token)
 router.get('/me', auth, authController.me);

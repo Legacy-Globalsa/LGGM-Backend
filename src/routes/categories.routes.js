@@ -10,6 +10,9 @@ const router = Router();
 
 router.use(auth);
 
+// POST   /api/categories/seed-defaults — create defaults if none exist
+router.post('/seed-defaults', categoriesController.seedDefaults);
+
 // GET    /api/categories        — list user's categories
 router.get('/', categoriesController.list);
 

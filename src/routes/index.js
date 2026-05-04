@@ -12,6 +12,7 @@ const obligationsRoutes = require('./obligations.routes');
 const reportsRoutes = require('./reports.routes');
 const yearsRoutes = require('./years.routes');
 const categoriesRoutes = require('./categories.routes');
+const moneyAccountsRoutes = require('./money_accounts.routes');
 
 /**
  * Mounts all API routes under `/api`.
@@ -25,6 +26,7 @@ function mountRoutes(app) {
   app.use('/api/reports', reportsRoutes);
   app.use('/api/years', yearsRoutes);
   app.use('/api/categories', categoriesRoutes);
+  app.use('/api/money-accounts', moneyAccountsRoutes);
 }
 
 module.exports = { mountRoutes };

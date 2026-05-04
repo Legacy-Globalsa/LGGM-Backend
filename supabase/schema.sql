@@ -217,59 +217,12 @@ create policy "transactions_owner_all"
   using  (user_id = auth.uid())
   with check (user_id = auth.uid());
 
--- ── Trigger: keep money_accounts.balance in sync with transactions ──
-create or replace function public.apply_txn_to_account()
-returns trigger
-language plpgsql
-as $$
-declare
-  sign_old int;
-  sign_new int;
-begin
-  if (tg_op = 'INSERT') then
-    if new.money_account_id is not null then
-      sign_new := case when new.type = 'income' then 1 else -1 end;
-      update public.money_accounts
-        set balance = balance + (sign_new * new.amount),
-            updated_at = now()
-        where id = new.money_account_id and user_id = new.user_id;
-    end if;
-    return new;
-  elsif (tg_op = 'DELETE') then
-    if old.money_account_id is not null then
-      sign_old := case when old.type = 'income' then 1 else -1 end;
-      update public.money_accounts
-        set balance = balance - (sign_old * old.amount),
-            updated_at = now()
-        where id = old.money_account_id and user_id = old.user_id;
-    end if;
-    return old;
-  elsif (tg_op = 'UPDATE') then
-    -- Reverse the old impact, then apply the new.
-    if old.money_account_id is not null then
-      sign_old := case when old.type = 'income' then 1 else -1 end;
-      update public.money_accounts
-        set balance = balance - (sign_old * old.amount),
-            updated_at = now()
-        where id = old.money_account_id and user_id = old.user_id;
-    end if;
-    if new.money_account_id is not null then
-      sign_new := case when new.type = 'income' then 1 else -1 end;
-      update public.money_accounts
-        set balance = balance + (sign_new * new.amount),
-            updated_at = now()
-        where id = new.money_account_id and user_id = new.user_id;
-    end if;
-    return new;
-  end if;
-  return null;
-end;
-$$;
-
 drop trigger if exists trg_txn_apply_to_account on public.transactions;
-create trigger trg_txn_apply_to_account
-  after insert or update or delete on public.transactions
-  for each row execute function public.apply_txn_to_account();
+drop function if exists public.apply_txn_to_account();
+
+-- Money account balances are intentionally NOT updated by income/expense
+-- transactions. Balances represent savings transferred through the Money
+-- Accounts savings grid, handled by the obligations service layer.
 
 -- ╔════════════════════════════════════════════════╗
 -- ║  obligations + obligation_entries              ║
