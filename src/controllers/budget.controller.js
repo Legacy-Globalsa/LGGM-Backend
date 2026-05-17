@@ -82,8 +82,9 @@ async function computeAndUpsertBudgets(supabase, userId, yearId) {
     const first_fruit_planned = income * resolvePct(yearRow, override, 'first_fruit_pct') / 100;
     const other_planned    = income * resolvePct(yearRow, override, 'other_expenses_pct') / 100;
 
+    const otherActual = txn.expenses + obl.other;
     const totalActual = obl.tithes + obl.offering + obl.first_fruit + obl.savings
-      + obl.loans + obl.fixed_bills + obl.other + txn.expenses;
+      + obl.loans + obl.fixed_bills + otherActual;
     const totalPlanned = tithes_planned + offering_planned + savings_planned + first_fruit_planned + other_planned;
     const status = totalActual > totalPlanned ? 'over_budget'
       : totalActual === totalPlanned ? 'at_budget' : 'under_budget';
@@ -104,7 +105,7 @@ async function computeAndUpsertBudgets(supabase, userId, yearId) {
       first_fruit_actual: obl.first_fruit,
       loans_actual: obl.loans,
       fixed_bills_actual: obl.fixed_bills,
-      other_actual: txn.expenses,
+      other_actual: otherActual,
       status,
     });
   }
